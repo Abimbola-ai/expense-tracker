@@ -10,7 +10,8 @@ public class TestApp {
 //		db.createTable();
 //		db.close();
 		User app = new User();
-		app.registerNewUser();		
+		app.registerNewUser();
+				
 		
 
 	}

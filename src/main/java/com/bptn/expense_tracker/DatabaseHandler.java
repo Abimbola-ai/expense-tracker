@@ -93,14 +93,13 @@ public class DatabaseHandler {
 	}
 	
 	// Method to check if the username or email already exist in the database
-	public boolean checkUser(String username, String email) {
-		String sql = "SELECT COUNT(*) FROM users WHERE username = ? OR email = ?";
+	public boolean checkUserExists(String username) {
+		String sql = "SELECT COUNT(*) FROM users WHERE username = ?";
 		try (PreparedStatement stmt = connection.prepareStatement(sql)){
 			stmt.setString(1, username);
-			stmt.setString(2,  email);
 			ResultSet rs = stmt.executeQuery();	
 			if (rs.next() && rs.getInt(1) > 0) {
-				System.out.println("Error: Username or email already exist.");
+				System.out.println("Error: Username already exist.");
 				return false;
 			}
 			
@@ -111,6 +110,25 @@ public class DatabaseHandler {
 		return true;
 	
 	}
+	
+	// Method to check if the username or email already exist in the database
+		public boolean checkEmailExists(String email) {
+			String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
+			try (PreparedStatement stmt = connection.prepareStatement(sql)){
+			
+				stmt.setString(1,  email);
+				ResultSet rs = stmt.executeQuery();	
+				if (rs.next() && rs.getInt(1) > 0) {
+					System.out.println("Error: Email already exist.");
+					return false;
+				}			
+			} catch (SQLException e){
+				System.out.println("Error checking existing user: " + e.getMessage());
+				return false;
+			}
+			return true;
+		
+		}
 	
 	// Method that fetches user details based on the username
 	public String getUserByUsername(String username) {

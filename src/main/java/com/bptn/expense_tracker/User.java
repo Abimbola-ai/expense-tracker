@@ -1,5 +1,7 @@
 package com.bptn.expense_tracker;
 
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.EmptyStackException;
 import java.util.Scanner;
 
@@ -75,19 +77,27 @@ public class User {
 	}
 
 	// User Registration method
-	public void registerNewUser() throws EmptyFieldException {
+	public void registerNewUser() {
 		System.out.println("Welcome to the expense tracker app");
 		System.out.println("Register here: ");
+
 		try {
+			db.connect();
 			// Get a valid username
 			while (true) {
 				// Prompt user for username
 				System.out.print("Please enter your username: ");
 				username = scanner.nextLine();
 				if (username == null || username.trim().isEmpty()) {
-					throw new EmptyFieldException("Username cannot be empty");
+					System.out.println("Error: Username cannot be empty");
+
 				}
-				break;
+				if (!db.checkUserExists(username)) {
+					//System.out.println("exist");
+				} else {
+					break;
+				}
+
 			}
 
 			// Get a valid email
@@ -96,9 +106,15 @@ public class User {
 				System.out.print("Please enter your email: ");
 				email = scanner.nextLine();
 				if (email == null || email.trim().isEmpty()) {
-					throw new EmptyFieldException("Email cannot be empty");
+					System.out.println("Error: Email cannot be empty");
+
+				} 
+				if (!db.checkEmailExists(email)) {
+					//System.out.println("exist");
+				} else {
+					break;
 				}
-				break;
+
 			}
 
 			// Get a valid password
@@ -107,34 +123,35 @@ public class User {
 				System.out.print("Please enter your password: ");
 				password = scanner.nextLine().trim();
 				if (password == null || password.trim().isEmpty()) {
-					throw new EmptyFieldException("Password cannot be empty");
+					System.out.println("Error: Username cannot be empty");
 
-				}
-				if (!validatePassword(password)) {
+				} else if (!validatePassword(password)) {
 					System.out.println("Error: Password does not meet security requirements");
-					return;
+
+				} else {
+					break;
 				}
-				break;
 			}
-				db.connect();
-				db.addUser(username, email, hashPassword(password));
-				System.out.println("Registration successfully.");
+			db.connect();
+			boolean isUserAdded = db.addUser(username, email, hashPassword(password));
 
-			} catch (EmptyFieldException e) {
-				System.out.println("Registration failed: " + e.getMessage());
-			} finally {
-				db.close();
+			if (isUserAdded) {
+				System.out.println("Registration successful! Welcome, " + username);
 			}
+		} catch (Exception e) {
+			System.out.println("Registration failed: " + e.getMessage());
+		} finally {
+			db.close();
+		}
 
-		
-			
 	}
 
 	// Authentication methods
 	public boolean validatePassword(String password) {
 		String passwordPatternString = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!()_:;<>,.?/~`\\-]).{8,}$";
 		if (!password.matches(passwordPatternString)) {
-			System.out.println("Password must be at least 8 letters long, include a number, uppercase, and a special character");
+			System.out.println(
+					"Password must be at least 8 letters long, include a number, uppercase, and a special character");
 			return false;
 		}
 		return true;
