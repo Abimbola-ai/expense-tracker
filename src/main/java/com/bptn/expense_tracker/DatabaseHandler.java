@@ -47,24 +47,27 @@ public class DatabaseHandler {
 				+ "password_hash VARCHAR(255) NOT NULL,"
 				+ "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)";
 		
+		String categories = "CREATE TABLE IF NOT EXISTS categories ("
+				+ "categoryId INT AUTO_INCREMENT PRIMARY KEY," 
+				+ "categoryName VARCHAR(50) NOT NULL UNIQUE)";
+		
 		String expenses = "CREATE TABLE IF NOT EXISTS expenses ("
 				+ "expenseId INT AUTO_INCREMENT PRIMARY KEY," 
 				+ "userId INT NOT NULL," 
 				+ "categoryId INT NOT NULL," 
-				+ "amount DECIMAL(10,2 NOT NULL,"
-				+ "description TEXT,"
+				+ "amount DECIMAL(10,2) NOT NULL,"
+				+ "description VARCHAR(100),"
 				+ "date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
-				+ "FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE"
-				+ "FOREIGN KEY (categoryId) REFERENCES categories(id) ON DELETE CASCADE)";
+				+ "FOREIGN KEY (userId) REFERENCES users(userId) ON DELETE CASCADE,"
+				+ "FOREIGN KEY (categoryId) REFERENCES categories(categoryId) ON DELETE CASCADE)";
 		
-		String categories = "CREATE TABLE IF NOT EXISTS categories ("
-				+ "categoryId INT AUTO_INCREMENT PRIMARY KEY," 
-				+ "categoryName VARCHAR(50) NOT NULL UNIQUE,)";
+		
 		
 		try(Statement stmt = connection.createStatement()){
 			stmt.execute(users);
-			stmt.execute(expenses);
 			stmt.execute(categories);
+			stmt.execute(expenses);
+			
 			System.out.println("Tables created successfully");
 		} catch (SQLException e) {
 			System.err.println("Error creating tables" + e.getMessage());
@@ -89,7 +92,25 @@ public class DatabaseHandler {
 		
 	}
 	
+	// Method to check if the username or email already exist in the database
+	public boolean checkUser(String username, String email) {
+		String sql = "SELECT COUNT(*) FROM users WHERE username = ? OR email = ?";
+		try (PreparedStatement stmt = connection.prepareStatement(sql)){
+			stmt.setString(1, username);
+			stmt.setString(2,  email);
+			ResultSet rs = stmt.executeQuery();	
+			if (rs.next() && rs.getInt(1) > 0) {
+				System.out.println("Error: Username or email already exist.");
+				return false;
+			}
+			
+		} catch (SQLException e){
+			System.out.println("Error checking existing user: " + e.getMessage());
+			return false;
+		}
+		return true;
 	
+	}
 	
 	// Method that fetches user details based on the username
 	public String getUserByUsername(String username) {
